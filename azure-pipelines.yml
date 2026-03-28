@@ -1,0 +1,46 @@
+trigger:
+  - main
+
+variables:
+  acrName: '<your-acr-name>'                  # e.g. myregistry
+  acrLoginServer: '$(acrName).azurecr.io'
+  imageRepository: 'hello-azure'
+  dockerfilePath: 'Dockerfile'
+  tag: '$(Build.BuildId)'
+  webAppName: '<your-web-app-name>'            # Azure Web App for Containers name
+  resourceGroup: '<your-resource-group>'
+
+stages:
+  - stage: Build
+    displayName: Build and Push Docker Image
+    jobs:
+      - job: BuildAndPush
+        displayName: Build and Push
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: Docker@2
+            displayName: Build and push Docker image to ACR
+            inputs:
+              command: buildAndPush
+              containerRegistry: '<your-acr-service-connection>'  # Azure DevOps service connection name
+              repository: '$(imageRepository)'
+              dockerfile: '$(dockerfilePath)'
+              tags: '$(tag)'
+
+  - stage: Deploy
+    displayName: Deploy to Azure Web App
+    dependsOn: Build
+    jobs:
+      - job: Deploy
+        displayName: Deploy
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: AzureWebAppContainer@1
+            displayName: Deploy to Azure Web App for Containers
+            inputs:
+              azureSubscription: '<your-azure-service-connection>'  # Azure DevOps service connection name
+              appName: '$(webAppName)'
+              resourceGroupName: '$(resourceGroup)'
+              containers: '$(acrLoginServer)/$(imageRepository):$(tag)'
