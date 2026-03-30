@@ -66,4 +66,4 @@ stages:
               appName: '$(webAppName)'
               resourceGroupName: '$(resourceGroup)'
               package: '$(System.ArtifactsDirectory)/drop/app.zip'
-              startUpCommand: 'gunicorn app:app'
+              startUpCommand: 'bash startup.sh'
